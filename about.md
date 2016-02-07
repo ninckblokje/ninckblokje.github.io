@@ -4,12 +4,6 @@ title: About
 permalink: /about/
 ---
 
-This is the base Jekyll theme. You can find out more info about customizing your Jekyll theme, as well as basic Jekyll usage documentation at [jekyllrb.com](http://jekyllrb.com/)
+I am a software developer working for SynTouch B.V. in The Netherlands. I specialize in Oracle Service Bus, Oracle SOA Suite and Oracle WebLogic; but I am also very interested in micro services, continuous integration, continuous delivery, Java and Docker.
 
-You can find the source code for the Jekyll new theme at:
-{% include icon-github.html username="jglovier" %} /
-[jekyll-new](https://github.com/jglovier/jekyll-new)
-
-You can find the source code for Jekyll at
-{% include icon-github.html username="jekyll" %} /
-[jekyll](https://github.com/jekyll/jekyll)
+GitHub is my public repository, any private repositories I keep at GitLab.
