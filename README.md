@@ -1,0 +1,1 @@
+Just a small blog about software I write, primarily focussed on Oracle Service Bus, Oracle SOA Suite and Oracle WebLogic.
