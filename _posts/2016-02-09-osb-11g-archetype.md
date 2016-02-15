@@ -28,7 +28,7 @@ I have the following components in my OSB project:
 - WSDL
 - XSD
 
-![Project structure]({{ site.github.url }}/assets/2016-02-09-osb-11g-archetype/project_structure.png)
+![Project structure]({{ site.github.url }}/assets/11g-archetype/project_structure.png)
 
 My proxy service has the following setup:
 
