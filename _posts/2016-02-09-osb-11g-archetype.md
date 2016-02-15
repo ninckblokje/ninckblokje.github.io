@@ -6,9 +6,9 @@ categories: jekyll update
 ---
 
 ## Introduction
-In Oracle Service Bus 12c it is possible to use templates. These templates can contain all reusable pieces of an OSB proxy service. However in 11g this feature is not available. At a customer where I am currently working our OSB proxy services are quite similar. Only a couple are really different.
+In Oracle Service Bus 12c it is possible to use templates. These templates can contain all reusable pieces of an OSB proxy service. However in 11g this feature is not available. At a customer I am currently working, the OSB proxy services are quite similar. Only a couple are really different.
 
-Maven provides a mechanism for creating projects from a template called archetypes. Although Service Bus 11g does nog use Maven, we can still use Maven archetypes to create a project from a template.
+Maven provides a mechanism for creating projects from a template called archetypes. Although Service Bus 11g does not use Maven, we can still use Maven archetypes to create a project from a template.
 
 Since every customer has its own unique set of requirements for OSB proxy services, I have created an example project which shows the Maven archetype.
 
@@ -23,7 +23,12 @@ The WSDL holds one operation, the request and response elements are defined in a
 
 I have the following components in my OSB project:
 
-![Project structure]({{ site.github.url }}/assets/osb-11g-archetype/project_structure.png)
+- Business service
+- Proxy service
+- WSDL
+- XSD
+
+![Project structure]({{ site.github.url }}/assets/2016-02-09-osb-11g-archetype/project_structure.png)
 
 My proxy service has the following setup:
 
@@ -32,7 +37,7 @@ My proxy service has the following setup:
 Each request and response will be logged and some error handling is in place. The business service points to a SOA composite (which I have not implemented in this case).
 
 ## Maven archetype
-Maven archetypes use the Apache Velocity templating engine to parse files. It is not a required for files to be parsed by Velocity, but in this case we want to replace values in the files.
+Maven archetypes use the Apache Velocity template engine to parse files. It is not required for files to be parsed by Velocity, but in this case we want to replace values in the files.
 
 A new project can be generated using the archetype with the following command, Maven will ask for all the required settings including custom variables.
 
@@ -92,7 +97,7 @@ Here is a part of my **archetype-metadata.xml**:
       </fileSets>
     ...
 
-I specify two requires properties (**serviceName** and **operations**) and specify multiple file sets. If a file set is filtered (**filtered="true"**) then the file is parsed by the Velocity template engine.
+I specify two required properties (**serviceName** and **operations**) and specify multiple file sets. If a file set is filtered (**filtered="true"**) then the file is parsed by the Velocity template engine.
 
 ### Velocity templates
 Almost all of the files will be processed by Velocity in order to replace names, namespaces and go through for loops for repeating parts for each operation. It is usefull to specify several special characters above your template like $, # and \\ as variable. Velocity uses these characters so by using the variables it is still possible to use the characters.
@@ -101,12 +106,12 @@ Almost all of the files will be processed by Velocity in order to replace names,
     #set( $symbol_dollar = '$' )
     #set( $symbol_escape = '\' )
 
-Any custom variables usd throughout the entire template should also be defined above your template.
+Any custom variables used throughout the entire template should also be defined above your template.
 
     #set( $majorVersion = $artifactId.replace($serviceName,"").replace("_","") )
     #set( $name = $serviceName.replace("Service","") )
 
-Now it is possible to use these variables and the variables from **archetype-metadata.xml** in the template. Since a part of my proxy will be repeated for each operation I have added a for each loop to my template (which I do in two places):
+Now it is possible to use these variables and the variables from **archetype-metadata.xml** in the template. Since a part of my proxy will be repeated for each operation I have added a for each loop to my template:
 
     #foreach($operation in $operations.split(" "))
     <con:pipeline type="request" name="${operation}PipelinePairNode_request">
@@ -142,9 +147,13 @@ Now it is possible to use these variables and the variables from **archetype-met
 The **operations** variable is split and for each value the values between the tags **#foreach** and **#end** are repeated.
 
 ### Renaming files
-It is possible to give files a dynamic name (though it is not possible to create a dynamic number of files). By placing two underscores infront of the variable name (as defined in **archetype-metadata.xml**) and two after the name is dynamically set when the archetype is executing. Example:
+It is possible to give files a dynamic name (though it is not possible to create a dynamic number of files). By placing two underscores in front of the variable name (as defined in **archetype-metadata.xml**) and two after the name is dynamically set when the archetype is executing. Example syntax:
 
     __serviceName__PS.proxy
+
+If the variable **serviceName** is set to **ForGitHubService** then the final name of the proxy service file will be:
+
+    ForGitHubServicePS.proxy
 
 ### Building
 The archetype can be build by Maven with the following command:
