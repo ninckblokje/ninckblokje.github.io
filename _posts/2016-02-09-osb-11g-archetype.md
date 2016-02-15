@@ -19,15 +19,15 @@ I based the template on a dummy OSB project. In real life it is off course possi
 
 The WSDL holds one operation, the request and response elements are defined in a separate XSD:
 
-![WSDL]({{ site.github.url }}/assets/2016-02-09-osb-11g-archetype/wsdl.png)
+![WSDL]({{ site.github.url }}/assets/osb-11g-archetype/wsdl.png)
 
 I have the following components in my OSB project:
 
-![Project structure]({{ site.github.url }}/assets/2016-02-09-osb-11g-archetype/project_structure.png)
+![Project structure]({{ site.github.url }}/assets/osb-11g-archetype/project_structure.png)
 
 My proxy service has the following setup:
 
-![Pipeline]({{ site.github.url }}/assets/2016-02-09-osb-11g-archetype/pipeline.png)
+![Pipeline]({{ site.github.url }}/assets/osb-11g-archetype/pipeline.png)
 
 Each request and response will be logged and some error handling is in place. The business service points to a SOA composite (which I have not implemented in this case).
 
@@ -53,7 +53,7 @@ A new project can be generated using the archetype with the following command, M
 
 This will generate a new OSB project called ForGitHubService_1.0 with two operations: hello and world.
 
-![New OSB project]({{ site.github.url }}/assets/2016-02-09-osb-11g-archetype/new_project.png)
+![New OSB project]({{ site.github.url }}/assets/osb-11g-archetype/new_project.png)
 
 The following paragraphs will provide some more in-depth details.
 
