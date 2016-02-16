@@ -1,8 +1,9 @@
 ---
 layout: post
 title:  "OSB 11g Maven Archetype"
-date:   2016-02-09 14:41:00 +0100
-categories: jekyll update
+tags:
+- osb
+- maven
 ---
 
 ## Introduction
