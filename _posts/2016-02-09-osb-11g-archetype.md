@@ -4,6 +4,7 @@ title:  "OSB 11g Maven Archetype"
 tags:
 - osb
 - maven
+disqus: true
 ---
 
 ## Introduction
