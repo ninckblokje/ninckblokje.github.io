@@ -4,6 +4,8 @@ title:  "How to create an OSB 11g Archetype"
 tags:
 - osb
 - maven
+- how_to
+- long_article
 disqus: true
 ---
 
