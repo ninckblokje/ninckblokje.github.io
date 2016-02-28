@@ -9,8 +9,7 @@ tags:
 disqus: true
 ---
 
-In my first post ([OSB 11g Maven Archetype]({% post_url 2016-02-09-osb-11g-archetype %})) I wrote about the example I made for an OSB 11g Maven archetype.
-Now I want to show how to create an archetype. This post has become quite long because of this!
+In my first post ([OSB 11g Maven Archetype]({% post_url 2016-02-09-osb-11g-archetype %})) I wrote about the an example Maven archetype I made for an OSB 11g. Now I want to show how to create an archetype and go through all the steps involved. This post has become quite long because of this!
 
 Creating an OSB archetype consist out of the following steps:
 
@@ -174,6 +173,8 @@ Several filesets have already been defined, but we will come to this part later.
     </archetype-descriptor>
 
 The **operations** variable will contain a list of operation names (seperated by a space) and the **serviceName** variable will contain the name without the major version. Note: It is possibly to provide a value for a variable, but it is not possible to mix variables in this file!
+
+The new variables must also be added to a test file. During step 1 Maven also created a **src/test/resources** folder. In this folder (a directories deeper actually) there is a file called **archetype.properties**. When running step 6, Maven will automatically test the archetype by creating a test one based upon the properties in this file.
 
 ## Step 4 - Modify files to use variables (create template file)
 
@@ -668,6 +669,8 @@ Several file names should contain a dynamic value. Specifically the file name of
 At last it is time to test the archetype. First we must build the archetype using Maven:
 
     $ mvn clean install
+
+During this command Maven generated a test project based upon the archetype so we can easily see the result. In the folder **target/test-classes/projects/basic/project** a test project has been generated.
 
 Next we can generate a project with the archetype:
 

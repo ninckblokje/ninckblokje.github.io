@@ -14,7 +14,7 @@ Maven provides a mechanism for creating projects from a template called archetyp
 
 Since every customer has its own unique set of requirements for OSB proxy services, I have created an example project which shows the Maven archetype.
 
-The entire example project is placed under [Apache 2.0](https://gitlab.com/syntouch/example-osb11g-archetype/blob/master/LICENSE) license at the [GitLab](https://gitlab.com/syntouch/example-osb11g-archetype) of SynTouch (my employer).
+The entire example project is placed under [Apache 2.0](https://gitlab.com/syntouch/example-osb11g-archetype/blob/master/LICENSE) license at the [GitLab](https://gitlab.com/syntouch/example-osb11g-archetype) of SynTouch (my employer). In a follow up [post]({% post_url 2016-02-25-how-to-create-osb-11g-archetype %}) I describe how to create an archetype from scratch.
 
 ## Sample Service Bus project
 I based the template on a dummy OSB project. In real life it is off course possible to use an existing OSB project. My projectname consists of two parts [SERVICE_NAME]_[MAJOR_VERSION].
