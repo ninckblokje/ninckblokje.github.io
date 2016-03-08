@@ -28,7 +28,9 @@ It is actualy quite easy to package Oracle JET as a Chrome extension! The follow
 - An image file
 - CSS values for **body.height** and **body.width**
 
-That's all! The project can be found in [GitHub]().
+That's all! The project can be found in [GitHub](https://github.com/ninckblokje/oraclejet-chrome-extension).
+
+I created a sample Oracle JET project with the basic template by following the instructions [here](http://www.oracle.com/webfolder/technetwork/jet/globalGetStarted.html). I also had to install **bower** and **grunt-cli**.
 
 ### manifest.json
 I used the following **manifest.json** (a complete description can be found at the [developers guide](https://developer.chrome.com/extensions/manifest)).
