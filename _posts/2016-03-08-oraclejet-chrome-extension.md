@@ -19,7 +19,7 @@ disqus: true
 Oracle has also written its own components and added them to Oracle JET.
 
 ## Chrome app vs Chrome extension
-I wanted to package Oracle JET as a Chrome packaged app, however I ran into some problems. So I decided to first start with a Chrome extension and later on try again on the packaged app. The permission model of a packaged app and an extension differs somewhat, which causes some problems with Oracle JET.
+I wanted to package Oracle JET as a Chrome packaged app, however I ran into some problems. So I decided to first start with a Chrome extension and later try again packaging Oracle JET as a packaged app. The permission model of a packaged app and an extension differ somewhat, which causes some problems with Oracle JET. More on Chrome permissions further on.
 
 ## Building the Chrome extension
 It is actualy quite easy to package Oracle JET as a Chrome extension! The following is required:
@@ -80,6 +80,6 @@ After importing the Chrome extension the result looks like this:
 ![Extension]({{ site.github.url }}/assets/oraclejet-chrome-extension/result.png)
 
 ## Chrome & Optimus / multi monitor
-I spend quite a lot of time figuring out why my extension was not rendering correctly. I finally figured it out, it was my multi monitor setup. By moving Chrome to the primary monitor my extension rendered correctly. I am not sure if this is because of the multi monitor setup of because of my NVidia Optimus graphic gards (GPU switching on a laptop).
+I spend quite a lot of time figuring out why my extension was not rendering correctly. I finally figured it out, it was my multi monitor setup. By moving Chrome to the primary monitor my extension rendered correctly. I am not sure if this is because of the multi monitor setup or because of my NVidia Optimus graphic gards (GPU switching on a laptop).
 
 ![Rendering error]({{ site.github.url }}/assets/oraclejet-chrome-extension/optimus_rendering_extension.png)
