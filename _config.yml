@@ -7,10 +7,12 @@
 
 # Site settings
 title: ninckblokje
+author: Jeroen Ninck Blok
 email: changjnb at gmail dot com
 description: > # this means to ignore newlines until "baseurl:"
   Just a small blog about software I write, primarily focussed
   on Oracle Service Bus, Oracle SOA Suite and Oracle WebLogic.
+keywords: oracle,osb,soa suite,weblogic,java,javascript,oraclejet,servicebus
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "http://ninckblokje.github.io" # the base hostname & protocol for your site
 twitter_username: ninckblokje
