@@ -21,7 +21,8 @@ This is the first part of a small series of blogs regarding my effort and will c
 Parts:
 
 - Part 1: Installation
-- Part 2
+- Part 2: Functionality
+- Part 3
 - Who knows!
 
 Just a small warning: Always keep track of Oracle license information and the Oracle certification matrix!
