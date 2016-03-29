@@ -21,7 +21,7 @@ This is the first part of a small series of blogs regarding my effort and will c
 Parts:
 
 - Part 1: Installation
-- Part 2: Functionality
+- [Part 2: Functionality]({% post_url 2016-03-29-cloud-adapter-sdk-part2 %})
 - Part 3
 - Who knows!
 
