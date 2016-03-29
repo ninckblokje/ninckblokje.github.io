@@ -14,7 +14,7 @@ disqus: true
 ## Introduction
 So this is part 2 of a series of blog post describing building a Cloud Adapter for MongoDB. In this part I want to discuss the functionality I want to achieve.
 
-I will use Windows 10 and PowerShell (my favourite Windows shell!) for these blogs.
+I will use Windows 10 and PowerShell (my favourite Windows shell!) for these blogs. All sources can be found on [GitHub](https://github.com/ninckblokje/MongoDBCloudAdapter).
 
 Parts:
 
