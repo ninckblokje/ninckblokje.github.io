@@ -156,11 +156,11 @@ I will create a new JDeveloper library which contains all the required dependenc
   - $ORACLE_HOME/soa/soa/modules/oracle.cloud.adapter_12.1.3/cloud-designtime-impl.jar
   - $ORACLE_HOME/soa/soa/modules/oracle.cloud.adapter_12.1.3/cloud-runtime-api.jar
   - $ORACLE_HOME/soa/soa/modules/oracle.cloud.adapter_12.1.3/cloud-runtime-impl.jar
-  - $ORACLE_HOME/soa/soa/modules/oracle.cloud.adapter_12.1.3/oracle.tools.cloud.adapter.sdk.jar
-  - $ORACLE_HOME/soa/soa/modules/oracle.cloud.adapter_12.1.3/oracle.tools.uiobjects.sdk.jar
+  - $ORACLE_HOME/osb/lib/uitools/oracle.tools.cloud.adapter.sdk.jar
+  - $ORACLE_HOME/osb/lib/uitools/oracle.tools.uiobjects.sdk.jar
   - $ORACLE_HOME/soa/plugins/jdeveloper/extensions/oracle.sca.modeler.jar
   - $ORACLE_HOME/soa/plugins/jdeveloper/extensions/oracle.sca.ui.adapters.jar
-  - $ORACLE_HOME/soa/plugins/jdeveloper/extensions/oracle.tools.cloud.adapter.ide.jar
+  - $ORACLE_HOME/osb/plugins/jdeveloper/extensions/oracle.tools.cloud.adapter.ide.jar
   - $ORACLE_HOME/jdeveloper/jlib/jewt4.jar
   - $ORACLE_HOME/wlserver/plugins/maven/com/oracle/weblogic/javax.resource_1.7.0.jar
   - $ORACLE_HOME/jdeveloper/ide/extensions/oracle.ide.jar
