@@ -10,7 +10,7 @@ tags:
 disqus: true
 ---
 
-Maarten Smeets posted a nice [article](https://technology.amis.nl/2016/02/28/asynchronous-interaction-in-oracle-bpel-and-bpm-ws-addressing-and-correlation-sets/) describing asynchronous interaction in BPEL and BPM using WS-Addressing and correlation sets. I wanted to use Service Bus 12c to force the callback to go through a proxy instead of going directly to the consumer. This can be useful when the target service should not have the ability to call services outsite of its trusted domain or network.
+Maarten Smeets posted a nice [article](https://technology.amis.nl/2016/02/28/asynchronous-interaction-in-oracle-bpel-and-bpm-ws-addressing-and-correlation-sets/) describing asynchronous interaction in BPEL and BPM using WS-Addressing and correlation sets. I wanted to use Service Bus 12c to force the callback to go through a Service Bus proxy instead of going directly to the consumer. This can be useful when the target service should not have the ability to call services outsite of its trusted domain or network.
 
 ## WS-Addressing
 WS-Addressing provides a way for message routing and correlation using SOAP headers. It is an official specification. Service Bus, SOA Suite, JAX-WS and quite a lot of other frameworks and tools support it one way or the other. There are two versions of WS-Addressing: 200508 and 200408.
@@ -115,4 +115,146 @@ Two bindings are generated, one for the request and one for the callback. The re
 
 ## Service Bus project
 
+![Service Bus]({{ site.github.url }}/assets/sb-wsa-callback/sb.png)
+
+The Service Bus project contains two proxy services, two business services and two pipelines. The first lane is for receiving the request from an external consumer, processing it and passing it on to the SOA composite. The second lane is for receiving the callback from the SOA composite, processing it and sending it to the correct external consumer.
+
+### First lane for request
+
+Now we want the Service Bus to receive the callback from the SOA composite so we need to change the WS-Addressing header **ReplyTo**. This header should contain a URL to the second proxy in this project. In the pipeline a stage contains the following logic:
+
+- Retrieve protocol, hostname and port and store it in variable **sbHostUrl**
+
+~~~~~~~~
+fn:substring-before($inbound/ctx:transport/ctx:request/http:absolute-URI/text(),$inbound/ctx:transport/ctx:uri/text())
+~~~~~~~~
+
+- Add the path of the second proxy to **sbHostUrl** and store in variable **sbCallbackUrl**
+
+~~~~~~~~
+fn:concat($sbHostUrl,'/CallbackWrapperService/Proxy/CallbackWrapperCallbackService')
+~~~~~~~~
+
+- Replace the WS-Addressing header **ReplyTo** (actually the child element **Address**) with variable **sbCallbackUrl**
+
+So now the SOA composite will receive the correct **ReplyTo** address for the callback. However the second lane handling the callback in Service Bus does not yet know where to send the callback to. There are several options to solve this problem, for example putting the original callback URL in Coherence and adding the Coherence key to the new callback URL. However I decided to encode the original callback URL and add it as a query parameter. The second lane can then retrieve the query parameter, decode it and send the callback to the decoded callback URL.
+
+Before replacing the WS-Addressing header **ReplyTo** the following code should be added:
+
+- Assign the original WS-Addressing header **ReplyTo** (actually the child element **Address**) to variable **clientReplyToUrl**
+- Add a JavaScript message processing with the following code for encoding the URL
+  - This is actually a Java based JavaScript engine in which we can call Java classes
+  - Variables prefixed with **process.** are variables retrieved / stored in the pipeline
+  - Notice the nice quirk of JDeveloper offering us browser based events!
+
+~~~~~~~~ javascript
+var clientReplyToUrl=new java.lang.String(process.clientReplyToUrl)
+var encoder=java.util.Base64.getEncoder()
+process.encodedReplyToUrl=encoder.encodeToString(clientReplyToUrl.getBytes('UTF-8'))
+~~~~~~~~
+
+![Service Bus]({{ site.github.url }}/assets/sb-wsa-callback/jdev_quirk.png)
+
+- The encoded URL is stored in variable **encodedReplyToUrl**
+- Instead of the previous replacement of **ReplyTo** the variables **sbCallbackUrl** will be concatenated with **encodedReplyToUrl** (as query parameter **clientCallbackUrl**)
+
+~~~~~~~~
+concat($sbCallbackUrl,'?clientCallbackUrl=',$encodedReplyToUrl)
+~~~~~~~~
+
+### Second lane for callback
+
+The SOA composite is going to use the complete URL specified in the **ReplyTo** header for its callback. This means that we get the query parameter **clientCallbackUrl** back from the SOA composite. The pipeline should contain the following logic:
+
+- Retrieve the value from the **clientCallbackUrl** query parameter and store it in the variable **encodedReplyToUrl**
+
+Make sure to reply HTTP status code 202 to the external consumer.
+
+~~~~~~~~
+$inbound/ctx:transport/ctx:request/http:query-parameters/http:parameter[@name='clientCallbackUrl']/@value
+~~~~~~~~
+
+- Decode the variable **encodedReployToUrl** and store it using a JavaScript message processing
+
+~~~~~~~~ javascript
+var encodedReplyToUrl=new java.lang.String(process.encodedReplyToUrl)
+var decoder=java.util.Base64.getDecoder()
+process.clientReplyToUrl=new java.lang.String(decoder.decode(encodedReplyToUrl),'UTF-8')
+~~~~~~~~
+
+- Replace the **To** header with the decoded callback URL stored in variable **clientReplyTo**
+- In the routing add a Routing Options and set **URI** to the variable **clientReplyTo**
+
+Make sure to reply the HTTP status 200 back to the SOA composite, since HTTP status 202 is not really accepted by SOA Suite.
+
+### Example URL's
+
+- SoapUI
+  - Request URL: ``http://localhost:7101/CallbackWrapperService/Proxy/CallbackWrapperService``
+  - Callback URL: ``http://localhost:8080/CallbackTestSuite/Complete``
+- Service Bus first lane
+  - Request URL: ``http://localhost:7101/soa-infra/services/default/CallbackWrapperService/callbackwrapperprocess_client_ep``
+  - Callback URL: ``http://localhost:7101/CallbackWrapperService/Proxy/CallbackWrapperCallbackService?clientCallbackUrl=aHR0cDovL2xvY2FsaG9zdDo4MDgwL0NhbGxiYWNrVGVzdFN1aXRlL0NvbXBsZXRl``
+- Service Bus Second Lane:
+  - Request URL: ``http://localhost:7101/CallbackWrapperService/Proxy/CallbackWrapperCallbackService?clientCallbackUrl=aHR0cDovL2xvY2FsaG9zdDo4MDgwL0NhbGxiYWNrVGVzdFN1aXRlL0NvbXBsZXRl``
+  - Callback URL: ``http://localhost:8080/CallbackTestSuite/Complete``
+
 ## Testing it!
+
+I have added several pipeline alerts to both proxy services for easy debugging. The body is also changed in order to easily identify which components handled the request and the response. Using SoapUI I have created a testcase which sends a request to the Service Bus and then waits for the callback.
+
+The first pipeline, the SOA composite and the second pipeline each concatenate something to the element **input**:
+
+- First pipeline adds **OSB-**
+- SOA composite adds **SOA-**
+- Second pipeline adds **OSBCALLBACK-**
+
+Request SOAP Envelope:
+
+~~~~~~~~ xml
+<soapenv:Envelope xmlns:cal="http://xmlns.oracle.com/CallbackWrapperSOA/CallbackWrapperService/CallbackWrapperProcess" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+	<soapenv:Header xmlns:wsa="http://www.w3.org/2005/08/addressing">
+		<wsa:ReplyTo>
+			<wsa:Address>http://localhost:8080/CallbackTestSuite/Complete</wsa:Address>
+		</wsa:ReplyTo>
+		<wsa:MessageID>CallbackTestSuite-Complete</wsa:MessageID>
+	</soapenv:Header>
+	<soapenv:Body>
+		<cal:process>
+			<cal:input>TestCase</cal:input>
+		</cal:process>
+	</soapenv:Body>
+</soapenv:Envelope>
+~~~~~~~~
+
+Callback SOAP Envelope:
+
+~~~~~~~~ xml
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+	<env:Header xmlns:env="http://schemas.xmlsoap.org/soap/envelope/" xmlns:wsa="http://www.w3.org/2005/08/addressing">
+		<wsa:To>http://localhost:8080/CallbackTestSuite/Complete</wsa:To>
+		<wsa:Action>processResponse</wsa:Action>
+		<wsa:MessageID>urn:6372b7ec-0bb4-11e6-8755-606720b7b1f0</wsa:MessageID>
+		<wsa:RelatesTo>CallbackTestSuite-Complete</wsa:RelatesTo>
+		<wsa:ReplyTo>
+			<wsa:Address>http://www.w3.org/2005/08/addressing/anonymous</wsa:Address>
+			<wsa:ReferenceParameters>
+				<instra:tracking.ecid xmlns:instra="http://xmlns.oracle.com/sca/tracking/1.0">81406fc3-1efd-4616-9e06-bbcfc5656d53-00000144</instra:tracking.ecid>
+				<instra:tracking.conversationId xmlns:instra="http://xmlns.oracle.com/sca/tracking/1.0">CallbackTestSuite-Complete</instra:tracking.conversationId>
+				<instra:tracking.FlowEventId xmlns:instra="http://xmlns.oracle.com/sca/tracking/1.0">100017</instra:tracking.FlowEventId>
+				<instra:tracking.FlowId xmlns:instra="http://xmlns.oracle.com/sca/tracking/1.0">100003</instra:tracking.FlowId>
+				<instra:tracking.CorrelationFlowId xmlns:instra="http://xmlns.oracle.com/sca/tracking/1.0">0000LHImctN1zWIqyoyWMG1N7qm1000003</instra:tracking.CorrelationFlowId>
+				<instra:tracking.quiescing.SCAEntityId xmlns:instra="http://xmlns.oracle.com/sca/tracking/1.0">40003</instra:tracking.quiescing.SCAEntityId>
+			</wsa:ReferenceParameters>
+		</wsa:ReplyTo>
+		<wsa:FaultTo>
+			<wsa:Address>http://www.w3.org/2005/08/addressing/anonymous</wsa:Address>
+		</wsa:FaultTo>
+	</env:Header>
+	<env:Body xmlns:env="http://schemas.xmlsoap.org/soap/envelope/" xmlns:wsa="http://www.w3.org/2005/08/addressing">
+		<processResponse xmlns="http://xmlns.oracle.com/CallbackWrapperSOA/CallbackWrapperService/CallbackWrapperProcess">
+			<result>OSBCALLBACK-SOA-OSB-TestCase</result>
+		</processResponse>
+	</env:Body>
+</soapenv:Envelope>
+~~~~~~~~
