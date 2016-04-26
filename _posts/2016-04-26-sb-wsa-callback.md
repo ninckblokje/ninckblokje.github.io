@@ -12,6 +12,8 @@ disqus: true
 
 Maarten Smeets posted a nice [article](https://technology.amis.nl/2016/02/28/asynchronous-interaction-in-oracle-bpel-and-bpm-ws-addressing-and-correlation-sets/) describing asynchronous interaction in BPEL and BPM using WS-Addressing and correlation sets. I wanted to use Service Bus 12c to force the callback to go through a Service Bus proxy instead of going directly to the consumer. This can be useful when the target service should not have the ability to call services outsite of its trusted domain or network.
 
+All sources can be found in my [GitHub](https://github.com/ninckblokje/callback-wrapper-sb12c) repository.
+
 ## WS-Addressing
 WS-Addressing provides a way for message routing and correlation using SOAP headers. It is an official specification. Service Bus, SOA Suite, JAX-WS and quite a lot of other frameworks and tools support it one way or the other. There are two versions of WS-Addressing: 200508 and 200408.
 
