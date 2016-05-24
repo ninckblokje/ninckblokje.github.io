@@ -20,7 +20,7 @@ This is the first part of a small series of blogs regarding my effort and will c
 
 Parts:
 
-- Part 1: Installation
+- [Part 1: Installation]({% post_url 2016-03-15-cloud-adapter-sdk-part1 %})
 - [Part 2: Functionality]({% post_url 2016-03-29-cloud-adapter-sdk-part2 %})
 - Part 3: Building the wizard
 - Who knows!
@@ -39,8 +39,12 @@ So I finally found a link to Oracle documentation regarding the Cloud Adapter SD
 
 During development it can be really useful to take a look at the following JAR files:
 
+- $ORACLE_HOME/oracle_common/modules/com.oracle.webservices.orawsdl-api_12.1.3.jar
 - $ORACLE_HOME/osb/lib/uitools/oracle.tools.cloud.adapter.sdk.jar
 - $ORACLE_HOME/osb/lib/uitools/oracle.tools.uiobjects.sdk.jar
 - $ORACLE_HOME/osb/plugins/jdeveloper/extensions/oracle.tools.cloud.adapter.ide.jar
+- $ORACLE_HOME/soa/plugins/jdeveloper/extensions/oracle.cloud.adapter.api.jar
 - $ORACLE_HOME/soa/plugins/jdeveloper/extensions/oracle.cloud.adapter.impl.jar
+- $ORACLE_HOME/soa/plugins/jdeveloper/extensions/oracle.sca.modeler.jar
+- $ORACLE_HOME/soa/plugins/jdeveloper/extensions/oracle.sca.ui.adapters.jar
 - $ORACLE_HOME/soa/soa/modules/oracle.cloud.adapter_12.1.3/EloquaCloudAdapter.jar
