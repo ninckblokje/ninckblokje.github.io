@@ -207,15 +207,15 @@ Don't forget to build the project first!
 
 The Oracle document [Developing Custom Oracle Cloud Adapters](https://docs.oracle.com/cloud/latest/intcs_gs/CCCDG/CCCDG.pdf) describes the Cloud Adapter SDK.
 
-## Implementation
-
-The implementation contains a lot of small, but important things for the wizard. I hope I described all things correctly. The source is of course available on [GitHub](https://github.com/ninckblokje/MongoDBCloudAdapter). It contains the correct sequence for the classes and the overview for both the design time and runtime part of the SDK.
-
 I will only shown the following two diagrams from this document:
 
 ![SDK overview](({{ site.github.url }}/assets/cloud-adapter-sdk-part3/sdk_overview.png)
 
 ![SDK design time](({{ site.github.url }}/assets/cloud-adapter-sdk-part3/sdk_designtime.png)
+
+## Implementation
+
+The implementation contains a lot of small, but important things for the wizard. I hope I described all things correctly. The source is of course available on [GitHub](https://github.com/ninckblokje/MongoDBCloudAdapter). It contains the correct sequence for the classes and the overview for both the design time and runtime part of the SDK.
 
 ### Implemented / extended Oracle classes
 
