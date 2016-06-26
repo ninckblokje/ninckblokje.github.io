@@ -31,7 +31,7 @@ Just a small warning: Always keep track of Oracle license information and the Or
 
 It took me quite a while to figure out how the Cloud Adapter SDK worked (at least the wizard part). So I decided to only support the insert method for now. Also the code is quite messy, logging is absent and exception handling is minimum. Hopefully this will change in the future.
 
-This blog post has also been in draft for over a month...
+This blog post has also been in draft for over a month... and turned out to be very long and a bit unstructured.
 
 ## What should the wizard do?
 
@@ -203,7 +203,19 @@ Debugging is really easy (thanks to [Wilfred van der Deijl](https://twitter.com/
 
 Don't forget to build the project first!
 
+## Wizard sequence
+
+The Oracle document [Developing Custom Oracle Cloud Adapters](https://docs.oracle.com/cloud/latest/intcs_gs/CCCDG/CCCDG.pdf) describes the Cloud Adapter SDK.
+
 ## Implementation
+
+The implementation contains a lot of small, but important things for the wizard. I hope I described all things correctly. The source is of course available on [GitHub](https://github.com/ninckblokje/MongoDBCloudAdapter). It contains the correct sequence for the classes and the overview for both the design time and runtime part of the SDK.
+
+I will only shown the following two diagrams from this document:
+
+[SDK overview](({{ site.github.url }}/assets/cloud-adapter-sdk-part3/sdk_overview.png)
+
+[SDK design time](({{ site.github.url }}/assets/cloud-adapter-sdk-part3/sdk_designtime.png)
 
 ### Implemented / extended Oracle classes
 
@@ -268,7 +280,7 @@ I am not really sure, though I believe the **RuntimeGenerationContext** is only 
 
 ### Different models
 
-There are basically three different models in the wizard you should be aware of:
+There are basically three different models in the wizard you should be aware of (and I made the names up myself):
 
 - The pre-wizard model
 - The post-wizard model
@@ -282,19 +294,174 @@ The post-wizard model is stored in an instance of **oracle.tip.tools.ide.adapter
 
 Once again, I am not completely sure about this.
 
+#### Building the pre-wizard model
+
+The **MetadataParser** will provide the pre-wizard model and it will be exposed by the metadata browser. The metadata browser is implemented in the class **MongoDBMetadataBrowser**. In my implementation of the metadata browser I will also read the BSON / JSON document. For a new adapter I will retrieve it from the MongoDB collection and for an existing adapter I will read a sample BSON / JSON file (see further on in this post).
+
+In the class **MongoDBMetadataParser** the pre-wizard model is build. It will use the BSON / JSON document provided by the metadata browser. For each operation (just the insert operation) the method **addOperation** is called from the **parse** method is called.
+
+~~~~~~~~java
+protected void addOperation(CloudApplicationModel cloudApplicationModel, String operationName, DataSource dataSource) {
+    Document bson =  getDocument(dataSource);
+
+    logger.log(LoggerService.Level.INFO, "Adding operation [" + operationName + "] to CloudApplicationModel");
+    switch(operationName) {
+        case "insert":
+            cloudApplicationModel.addOperation(getInsertOperation(cloudApplicationModel, bson, getBaseNamespace()));
+            break;
+        default:
+            logger.log(LoggerService.Level.SEVERE, "Unable to add unknown operation [" + operationName + "]");
+            throw new RuntimeException("Unable to add unknown operation [" + operationName + "]");
+    };
+}
+~~~~~~~~
+
+The **getInsertOperation** will build the model for the insert operation. If the operation is already known then it will be updated. Otherwise a new one is created. The invocation style will be request response. For the request and response two separate methods are used: **getInsertRequest** and **getInsertResponse**.
+
+~~~~~~~~java
+protected CloudOperationNode getInsertOperation(CloudApplicationModel cloudApplicationModel, Document bson, String baseNamespace) {
+    CloudOperationNodeImpl existingOperation = (CloudOperationNodeImpl) getExistingOperation(cloudApplicationModel, "insert");
+
+    CloudOperationNodeImpl operation = (existingOperation == null) ? new CloudOperationNodeImpl() : existingOperation;
+    operation.setName("insert");
+    operation.setInvocationStyle(InvocationStyle.REQUEST_RESPONSE);
+
+    operation.getRequestParameters().add(getInsertRequest(bson, baseNamespace));
+    operation.setResponse(getInsertResponse(baseNamespace));
+
+    return operation;
+}
+~~~~~~~~
+
+A base namespace is provided to these methods since both the request and response will be using a document, but the content of the document is different. The base namespace consists of the adapter name, the database name, the collection name and the operation name.
+
+The request operation will be based upon either a BSON / JSON document from the MongoDB collection or on the BSON / JSON sample document.
+
+~~~~~~~~java
+protected RequestParameter getInsertRequest(Document bson, String baseNamespace) {
+    RequestParameterImpl request = new RequestParameterImpl();
+    request.setDataType(BSONUtil.parseToDataObjectNode(bson, baseNamespace + "/insert/request"));
+
+    return request;
+}
+~~~~~~~~
+
+The response will be an empty document with just the **ObjectId**.
+
+~~~~~~~~java
+protected OperationResponse getInsertResponse(String baseNamespace) {
+    OperationResponseImpl response = new OperationResponseImpl();
+
+    Document bson = BSONUtil.getUnstructuredDocument();
+
+    response.setDescription("ObjectId of newly insert document");
+    response.setName("_id");
+    response.setQualifiedName(new QName("InsertResponseDocument"));
+    response.setResponseObject(BSONUtil.parseToDataObjectNode(bson, baseNamespace + "/insert/response"));
+
+    return response;
+}
+~~~~~~~~
+
+The method **parseToDataObjectNode** transforms the BSON document to an instance **CloudDataObjectNode**. For the moment only **String** fields are supported. Subdocuments and arrays are not.
+
+~~~~~~~~java
+public static CloudDataObjectNode parseToDataObjectNode(Document bson, String namespace) {
+    QName qName = new QName(namespace, "Document");
+    CloudDataObjectNode bsonNode = new CloudDataObjectNodeImpl(null, qName, ObjectCategory.CUSTOM, DataType.OBJECT);
+
+    Set<String> keys = bson.keySet();
+    for (String key: keys) {
+        CloudDataObjectNode type = BSONDataTypeMapper.getDataObjectNode(bson.get(key));
+        // new FieldImpl(String name, CloudDataObjectNode fieldType, boolean array, boolean required, boolean nullable, boolean custom)
+        bsonNode.addField(new FieldImpl(key, type, false, false, true, true));
+    }
+
+    CloudDataObjectNode unstructuredType = new CloudDataObjectNodeImpl(null, new QName("http://www.w3.org/2001/XMLSchema", "anyType"), ObjectCategory.BUILTIN);
+    bsonNode.addField(new FieldImpl("_unstructured", unstructuredType, false, false, true, true));
+
+    return bsonNode;
+}
+~~~~~~~~
+
+#### Transforming between pre-wizard and post-wizard
+
+Oracle transforms the post-wizard to the WSDL model and then to a WSDL. However the transformation between the pre-wizard and post-wizard models must be implemented. The behaviour for add a new adapter vs editing an existing model is not really clear. I will skill a few steps, but operations page. After pressing **Next** eventually the method **updateTransformationModelBuilder** is called. The **TransformationModelBuilder** eithers builds a new model (when adding an adapter) or returns an existing model (when editing an adapter). If the operation **getOperationMappings** returns an empty list then its a new model.
+
+~~~~~~~~java
+protected void updateTransformationModelBuilder(String operationName, String mode, Document bson) {
+    TransformationModelBuilder modelBuilder = getTransformationModelBuilder();
+    TransformationModel model = modelBuilder.build();
+
+    if (model.getOperationMappings().isEmpty()) {
+        modelBuilder.addOperationMapping(getOperationMapping(operationName, mode, bson));
+    } else {
+        OperationMapping operationMapping = model.getOperationMappings().get(0);
+        OperationMapping newOperationMapping = getOperationMapping(operationName, mode, bson);
+
+        operationMapping.getRequestObjectMappings().clear();
+        operationMapping.setRequestObjectMappings(newOperationMapping.getRequestObjectMappings());
+
+        operationMapping.setResponseObjectMapping(newOperationMapping.getResponseObjectMapping());
+
+        operationMapping.setTargetOperation(newOperationMapping.getTargetOperation());
+        operationMapping.setNewOperationName(newOperationMapping.getNewOperationName());
+    }
+
+    setTransformationModelBuilder(modelBuilder);
+}
+~~~~~~~~
+
+The operation **getOperationMapping** will do the actual mapping. The pre-wizard model is retrieved from the metadata browser. A new **OperationMapping** is created and the **CloudOperationNode** is passed to it. Either the BSON / JSON document provided by the user is transformed into a **TypeMapping** instance. Or an empty document is the user requested the unstructered mode.
+
+~~~~~~~~java
+protected OperationMapping getOperationMapping(String operationName, String mode, Document bson) {
+    CloudOperationNode operation = getMetadataBrowser().getOperation(operationName);
+    OperationMapping operationMapping = new OperationMapping(operation, ObjectGrouping.ORDERED, ObjectGrouping.ORDERED, null);
+
+    String namespace = operation.getRequestParameters().get(0).getDataType().getQualifiedName().getNamespaceURI();
+    TypeMapping requestMapping = (Constants.MODE_STRUCTURED.equals(mode)) ? new TypeMapping(BSONUtil.parseToDataObjectNode(bson, namespace)) : new TypeMapping(BSONUtil.parseToDataObjectNode(BSONUtil.getUnstructuredDocument(), namespace));
+    operationMapping.getRequestObjectMappings().add(requestMapping);
+
+    TypeMapping responseMapping = new TypeMapping(operation.getResponse().getResponseObject());
+    operationMapping.getResponseObjectMapping().add(responseMapping);
+
+    return operationMapping;
+}
+~~~~~~~~
+
 ### Login and URL
 
 To keep things simple and flexible a decided to let the user only input a MongoDB URI (property **MongoDB.uri**). This URI contains the username, password, hostname, port and several connection properties. It is stored (encrypted) in **csf**.
 
-### Wizard sequence
-
-![Wizard start classes]({{ site.github.url }}/assets/cloud-adapter-sdk-part3/wizard_start_classes.png)
-
-### Editing existing adapter
-
 ### Connection test
 
-### Sample document
+The **MongoDBConnection** class is responsible for testing the connection. It extends the Oracle class **AbstractCloudConnection**. I use it a little broader so I also implement the interface **AutoCloseable**. I also use it to retrieve a document from the MongoDB collection.
+
+The **ping** method will test the connection. It calls the connection method which is also used for retrieving the document.
+
+~~~~~~~~java
+@Override
+public PingStatus ping() {
+    try {
+        connect();
+        logger.log(LoggerService.Level.DEBUG, "Ping OK");
+
+        return PingStatus.SUCCESS_STATUS;
+    } catch (Exception ex) {
+        logger.log(LoggerService.Level.WARNING, "Ping NOK");
+        logger.log(LoggerService.Level.WARNING, ex.getMessage());
+
+        ex.printStackTrace();
+
+        return new PingStatus(ex);
+    } finally {
+        close();
+    }
+}
+~~~~~~~~
+
+In the **connect** method the properties for the URL, database name and collection name are retrieved. They are retrieved from by the Oracle method **getConnectionProperties**. All properties are stored in the connection properties.
 
 ### Wizard pages
 
@@ -390,18 +557,18 @@ public class MongoDBConnectionPage extends CloudAdapterConnectionPage {
 
 The operations page contains a lot more logic then the connection page. I want to provide some switches there and provide the ability for the user to change the sample BSON / JSON document. I decided to implement just the Oracle interface **ICloudAdapterPage** in the class **MongoDBOperationsPage**. The interface specifies I must implement the following methods:
 
+- getHelpId
 - getPageId
 - getPageName
 - getPageTitle
-- getHelpId
 - getWelcomeText
-- getPageEditFields
 - getChildrenEditPages
-- updateBackEndModel
+- getPageEditFields
 - getUpdatedEditPages
+- updateBackEndModel
 - validatePage
 
-Thie first five methods are just there for returning some static stuff. The others are more interesting.
+Thie first five methods are just there for returning some static stuff. The others are more interesting. I did not implement the method **getChildrenEditPages**.
 
 ##### getPageEditFields
 
@@ -427,6 +594,103 @@ fields.add(UIFactory.createEditField(operationsEditField, getText(operationsLabe
 ~~~~~~~~
 
 In this method I also check for context values and retrieve the sample document from the document. This can either be retrieved from the database (when a new adapter is created) or retrieved from a file (when an existing adapter is being edited).
+
+##### getUpdatedEditPages
+
+This method is called when state of an **EditField** changes. An instance **CloudAdapterPageState** is returned with a list of pages, the list of current fields and a boolean specifying if a refresh is needed.
+
+~~~~~~~~java
+@Override
+public CloudAdapterPageState getUpdatedEditPages(LinkedHashMap<String, ICloudAdapterPage> wizardPages,
+                                                 LinkedList<EditField> currentPageFields,
+                                                 String fieldName) throws CloudAdapterException {
+    getLogger().log(LoggerService.Level.DEBUG, "Received event from [" + fieldName + "]");
+
+    boolean refresh = false;
+    EditField eventSource = findEditField(currentPageFields, fieldName);
+    switch (fieldName) {
+        case modeEditField:
+            refresh = handleModeEvent(eventSource, currentPageFields);
+            break;
+        default:
+            getLogger().log(LoggerService.Level.DEBUG, "Ignoring event from [" + fieldName + "]");
+            break;
+    };
+
+    CloudAdapterPageState newState = new CloudAdapterPageState(refresh, wizardPages, currentPageFields);
+    return newState;
+}
+~~~~~~~~
+
+I have build two supporting methods. One for finding a specific field (in the useful abstract class **AbstractMongoDBPage**) and one for handling the change event.
+
+~~~~~~~~java
+protected EditField findEditField(LinkedList<EditField> currentPageFields, String fieldName) {
+    EditField eventSource = null;
+
+    for (EditField ef: currentPageFields) {
+        if (fieldName.equals(ef.getName())) {
+            eventSource = ef;
+            break;
+        }
+    }
+
+    return eventSource;
+}
+~~~~~~~~
+
+In the method **handleModeEvent** I check if the user requests a structured or unstructered document and I will enable or disable the input for the sample document.
+
+~~~~~~~~java
+protected boolean handleModeEvent(EditField eventSource, LinkedList<EditField> currentPageFields) {
+    SelectObject modeSelect = (SelectObject) eventSource.getObject();
+    String selectedMode = modeSelect.getSelectedValue();
+
+    EditField bsonEF = findEditField(currentPageFields, bsonEditField);
+    if (Constants.MODE_STRUCTURED.equals(selectedMode)) {
+        bsonEF.setDisabled(false);
+    } else {
+        bsonEF.setDisabled(true);
+    }
+
+    return false;
+}
+~~~~~~~~
+
+##### updateBackEndModel
+
+This method should actually store the data. An instance of **CloudAdapterPageState** should be returned.
+
+~~~~~~~~java
+@Override
+public CloudAdapterPageState updateBackEndModel(LinkedHashMap<String, ICloudAdapterPage> wizardPages,
+                                                LinkedList<EditField> currentPageFields) throws CloudAdapterException {
+    EditField operationsEF = findEditField(currentPageFields, operationsEditField);
+    String operation = ((SelectObject) operationsEF.getObject()).getSelectedValue();
+    getContext().setContextObject(Constants.CONTEXT_OPERATION_KEY, operation);
+
+    EditField modeEF = findEditField(currentPageFields, modeEditField);
+    String mode = ((SelectObject) modeEF.getObject()).getSelectedValue();
+    getContext().setContextObject(Constants.CONTEXT_MODE_KEY, mode);
+
+    EditField bsonEF = findEditField(currentPageFields, bsonEditField);
+    Document bson = Document.parse(((ITextAreaObject) bsonEF.getObject()).getValue());
+    getContext().setContextObject(Constants.CONTEXT_PARSE_DOCUMENT_KEY, bson);
+
+    updateTransformationModelBuilder(operation, mode, bson);
+
+    CloudAdapterPageState state = new CloudAdapterPageState(false, wizardPages, currentPageFields);
+    return state;
+}
+~~~~~~~~
+
+I do two things in this method. Add or update data in the context, including the sample document. And create or update the post-wizard model, which is stored in an instance of the class **TransformationModel**. This is done in a separate method **updateTransformationModelBuilder**.
+
+##### validatePage
+
+This method is called after pressing **Next** and will validate the fields. Specifically the fields for which you implement validation. I only need one validation, one for the BSON / JSON document. This should be valid.
+
+The method will return a **LinkedHashMap** which contains a map of String and **UIError** instances. The String should be filled with the page id (**getPageId**). An instance of **UIError** contains the fieldname and an error message (both constructor arguments).
 
 ### Specials
 
