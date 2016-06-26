@@ -20,7 +20,7 @@ Parts:
 
 - [Part 1: Installation]({% post_url 2016-03-15-cloud-adapter-sdk-part1 %})
 - Part 2: Functionality
-- Part 3
+- [Part 3: Building the wizard]({% post_url 2016-06-26-cloud-adapter-sdk-part3 %})
 - Who knows!
 
 Just a small warning: Always keep track of Oracle license information and the Oracle certification matrix!
