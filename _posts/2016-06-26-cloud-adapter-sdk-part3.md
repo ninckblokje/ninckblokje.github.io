@@ -213,9 +213,9 @@ The implementation contains a lot of small, but important things for the wizard.
 
 I will only shown the following two diagrams from this document:
 
-[SDK overview](({{ site.github.url }}/assets/cloud-adapter-sdk-part3/sdk_overview.png)
+![SDK overview](({{ site.github.url }}/assets/cloud-adapter-sdk-part3/sdk_overview.png)
 
-[SDK design time](({{ site.github.url }}/assets/cloud-adapter-sdk-part3/sdk_designtime.png)
+![SDK design time](({{ site.github.url }}/assets/cloud-adapter-sdk-part3/sdk_designtime.png)
 
 ### Implemented / extended Oracle classes
 
