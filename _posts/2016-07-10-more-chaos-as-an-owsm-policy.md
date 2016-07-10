@@ -10,13 +10,13 @@ disqus: true
 ---
 ## Errors & failures
 
-So it is very easy to implement a happy flow, however handling errors, rolling back transactions and recovering from errors and failures can be quite challenging. It is not possible to find all the possibilities during development or design. Some errors or failures will only occur when very rare circumstances come into play together. Then all the parts of the application either will handle the error and will ensure that no data is lost and the application survices or not. In the last case people lose data, applications crash and managers get upset.
+So it is very easy to implement a happy flow. However handling errors, rolling back transactions and recovering from errors and failures can be quite challenging. It is not possible to find all the possibilities during development or design. Some errors or failures will only occur when very rare circumstances come into play together. Then all the parts of the application either will handle the error and will ensure that no data is lost and the application survives or not. In the last case people lose data, applications crash and managers get upset.
 
 A very good read on this topic is the book [Release It!](https://pragprog.com/book/mnee/release-it).
 
 ## A policy
 
-Most of the time I write services in either Oracle Service Bus or Oracle SOA Suite. I can mock expected error behaviour, however sometimes having errors when you don't expect them can give you new inside into the stability and resilience of the application.
+Most of the time I write services in either Oracle Service Bus or Oracle SOA Suite. I can mock expected error behaviour, however sometimes having errors when you don't expect them can give you new insite into the stability and resilience of the application.
 
 To create (unexpected) errors a Managed Server can be stopped, data sources can be removed or entire virtual machine's can be deleted. However these Managed Servers are quite heavy and when I ask somebody if I can break something during a test I am usually asked to get a cup of coffee ;)
 
@@ -131,3 +131,7 @@ The OWSM policy generates some logging through the ADF Logging framework. It can
 ![Logging, part 1]({{ site.github.url }}/assets/more-chaos-as-an-owsm-policy/finding_odl_1.png)
 
 ![Logging, part 2]({{ site.github.url }}/assets/more-chaos-as-an-owsm-policy/finding_odl_2.png)
+
+## Usage
+
+So why would you use such an OWSM policy? Well, if you attach this policy in a test environment failures will get automatically tested during the test phase. The testers (or end users who are testing it) will provide near instant feedback and best of all: No production data is in danger!
