@@ -132,6 +132,6 @@ The OWSM policy generates some logging through the ADF Logging framework. It can
 
 ![Logging, part 2]({{ site.github.url }}/assets/more-chaos-as-an-owsm-policy/finding_odl_2.png)
 
-## Usage
+## Use case for the policy
 
-So why would you use such an OWSM policy? Well, if you attach this policy in a test environment failures will get automatically tested during the test phase. The testers (or end users who are testing it) will provide near instant feedback and best of all: No production data is in danger!
+So why would you use such an OWSM policy? Well, if you attach this policy in a test environment, failures will get automatically tested during the test phase. The testers (or end users who are testing it) will provide near instant feedback and best of all: No production data is in danger!
