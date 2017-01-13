@@ -162,7 +162,7 @@ I will create a new JDeveloper library which contains all the required dependenc
   - $ORACLE_HOME/soa/plugins/jdeveloper/extensions/oracle.sca.ui.adapters.jar
   - $ORACLE_HOME/osb/plugins/jdeveloper/extensions/oracle.tools.cloud.adapter.ide.jar
   - $ORACLE_HOME/jdeveloper/jlib/jewt4.jar
-  - $ORACLE_HOME/wlserver/plugins/maven/com/oracle/weblogic/javax.resource_1.7.0.jar
+  - $ORACLE_HOME/wlserver/modules/javax.resource_1.7.0.jar
   - $ORACLE_HOME/jdeveloper/ide/extensions/oracle.ide.jar
   - $ORACLE_HOME/oracle_common/modules/com.oracle.webservices.orawsdlapi_12.1.3.jar
   - $ORACLE_HOME/oracle_common/modules/oracle.xdk_12.1.3/xmlparserv2.jar
