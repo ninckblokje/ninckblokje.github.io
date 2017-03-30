@@ -269,7 +269,7 @@ Now run the composite:
 /assets/cloud-adapter-sdk-part4/instance.png)
 
 ![Instance]({{ site.github.url }}
-/assets/cloud-adapter-sdk-part4/invoke.png)
+/assets/cloud-adapter-sdk-part4/invoke.PNG)
 
 And the data is stored in MongoDB (by searching for the **_id** returned by the Cloud Adapter):
 
