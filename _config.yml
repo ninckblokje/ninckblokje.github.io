@@ -22,5 +22,5 @@ disqus_username: ninckblokje
 
 # Build settings
 markdown: kramdown
-gems:
+plugins:
   - jekyll-sitemap
